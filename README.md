@@ -94,3 +94,124 @@ ls -lh data/
 ```
 
 You can also download the files from the competition's **Data** tab and
+## 2. Setup (Windows, without WSL)
+
+Use this section if you work in PowerShell instead of WSL.
+
+### 2.1 Install the tools (first time only)
+
+Open **PowerShell** and run:
+
+```powershell
+winget install Python.Python.3.12
+winget install Git.Git
+winget install Microsoft.VisualStudioCode
+```
+
+Close and reopen PowerShell, then check:
+
+```powershell
+python --version
+git --version
+```
+
+If `python` opens the Microsoft Store, install Python from python.org and tick **Add python.exe to PATH** in the installer.
+
+Set your Git identity:
+
+```powershell
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git config --global core.autocrlf true
+```
+
+### 2.2 Clone the repo
+
+Use a short path outside OneDrive (for example `C:\Projects`), because OneDrive sync and long paths cause problems with large datasets.
+
+```powershell
+mkdir C:\Projects
+cd C:\Projects
+git clone https://github.com/cterhungga26042006/nveda-CASMI-2026---Molecule-ID-From-Mass-Spectra.git Enveda
+cd Enveda
+```
+
+### 2.3 Create the virtual environment
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install kaggle
+```
+
+If PowerShell says running scripts is disabled, run this once and try again:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+In `cmd.exe`, use `.venv\Scripts\activate.bat` instead.
+
+Install project packages (once `requirements.txt` exists):
+
+```powershell
+pip install -r requirements.txt
+```
+
+For GPU training, install PyTorch with the command generated at pytorch.org (choose Windows, Pip, and your CUDA version).
+
+Leave the environment with `deactivate`. Re-activate it with `.venv\Scripts\Activate.ps1` in every new terminal.
+
+### 2.4 Set up your Kaggle API token
+
+1. Go to kaggle.com, profile picture, **Settings**, **API**, **Create New Token**.
+2. Copy the downloaded file into your user folder:
+
+```powershell
+mkdir $HOME\.kaggle
+copy "$HOME\Downloads\kaggle.json" "$HOME\.kaggle\kaggle.json"
+```
+
+Adjust the source path if the file is elsewhere (for example `D:\Users\<you>\Downloads\kaggle (1).json`). Keep the quotes because of spaces.
+
+3. Test it:
+
+```powershell
+kaggle competitions list
+```
+
+Keep the token private. Do not share it or commit it.
+
+### 2.5 Download the competition data
+
+Accept the rules on the competition page first, otherwise you get a 403 error.
+
+```powershell
+kaggle competitions files enveda-CASMI26-molecule-id-mass-spectra
+kaggle competitions download -c enveda-CASMI26-molecule-id-mass-spectra
+Expand-Archive enveda-CASMI26-molecule-id-mass-spectra.zip -DestinationPath data
+dir data
+```
+
+You can also download from the competition's **Data** tab and extract into the `data` folder.
+
+### 2.6 Open in VS Code
+
+```powershell
+code .
+```
+
+Install the extensions **Python**, **Jupyter**, and **GitLens**. Press `Ctrl+Shift+P`, choose **Python: Select Interpreter**, and pick `.venv`.
+
+### 2.7 Common problems
+
+| Problem | Fix |
+|---|---|
+| `kaggle` is not recognized | The venv is not active. Re-activate it. |
+| 401 Unauthorized | `kaggle.json` is missing or in the wrong folder. |
+| 403 Forbidden on download | Accept the rules on the competition page. |
+| `Activate.ps1` is blocked | Run the `Set-ExecutionPolicy` command above. |
+| Slow or huge files | Keep the project outside OneDrive, and do not commit `data/`. |
+
+---
