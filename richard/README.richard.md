@@ -50,9 +50,9 @@ The Kaggle commit run was marked Failed after 16,613 s, but the epoch-2 checkpoi
 - denovo_eval.ipynb: loads the checkpoint and evaluates it.
 
 ## Checkpoint
-Not in this repo (1.24 GB). It is stored in a private Kaggle dataset: TODO (dataset name),
-together with tokenizer.json. The same tokenizer.json must be used with the checkpoint; a
-retrained tokenizer gives different token IDs.
+Not in this repo (1.24 GB). It is stored in a private Kaggle dataset:
+https://www.kaggle.com/datasets/richardnguyen1412/denovo-v1-weights
+together with tokenizer.json. The same tokenizer.json must be used with the checkpoint; aretrained tokenizer gives different token IDs.
 
 ## Not done yet
 - score(spectrum, smiles) function (teacher-forced log-likelihood) for Lupin.
