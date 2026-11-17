@@ -94,6 +94,7 @@ ls -lh data/
 ```
 
 You can also download the files from the competition's **Data** tab and
+
 ## 2. Setup (Windows, without WSL)
 
 Use this section if you work in PowerShell instead of WSL.
@@ -214,4 +215,53 @@ Install the extensions **Python**, **Jupyter**, and **GitLens**. Press `Ctrl+Shi
 | `Activate.ps1` is blocked | Run the `Set-ExecutionPolicy` command above. |
 | Slow or huge files | Keep the project outside OneDrive, and do not commit `data/`. |
 
----
+## Evaluation
+
+Submissions are scored with **Mean Reciprocal Rank @ 25 (MRR@25)**:
+
+$$\text{MRR@25} = \frac{1}{U}\sum_{u=1}^{U}\frac{1}{\text{rank}_u}$$
+
+- `U` is the number of molecules.
+- `rank_u` is the position of the **first correct** structure in your ranked list for molecule `u`.
+- A molecule scores **0** if none of its guesses is correct.
+- Each molecule has exactly one correct structure, so only the first correct guess counts.
+- A correct guess at position 1 scores 1.0, at position 2 scores 0.5, and at position 25 scores 0.04.
+
+### Matching
+
+A prediction is correct when it has the same **atom connectivity** as the answer. Both the prediction and the answer are passed through RDKit's tautomer canonicalization (pinned at **RDKit 2026.03.3**) and reduced to the first block of their InChIKey (**InChIKey14**). The two keys must match.
+
+Stereocenters and tautomer forms are **not penalized**. For example, both SMILES below score the same against glucose, because both reduce to `WQZGKKKJIJFFOK`:
+
+```
+OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O
+OCC1OC(O)C(O)C(O)C1O
+```
+
+Official metric notebook: https://www.kaggle.com/code/metric/casmi-mean-reciprocal-rank
+
+Notes from the official scorer code:
+- Stereochemistry is removed **before** tautomer canonicalization.
+- Duplicate guesses still take up rank positions, so remove duplicates before submitting.
+- An invalid SMILES counts as a wrong guess and still takes up a rank position.
+- A molecule that is missing from the submission scores 0.
+
+## Submission file
+
+For each `molecule_id` in the test set, predict **up to 25** candidate SMILES, **best guess first**, joined by semicolons in a single field. The file must have a header:
+
+```
+molecule_id,smiles
+m_0014ef,CC1=CC(=O)C=CC1=O;OC(=O)c1ccccc1O;CN1C=NC2=C1C(=O)N(C)C(=O)N2C
+m_004d06,NCCc1ccc(O)cc1;CC(=O)Nc1ccc(O)cc1;OCC(O)CO
+```
+
+- Fewer than 25 guesses is allowed. A wrong guess has no penalty except the rank it occupies.
+- Every `molecule_id` must appear **exactly once**.
+- A submission is **rejected** if:
+  - the `molecule_id` or `smiles` column is missing,
+  - the file is empty,
+  - either column contains nulls,
+  - a `molecule_id` is repeated,
+  - any molecule has more than 25 semicolon-separated guesses.
+- The file must be named `submission.csv`.
