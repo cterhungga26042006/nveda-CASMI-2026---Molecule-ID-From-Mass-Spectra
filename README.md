@@ -32,186 +32,32 @@ Prizes: 1st $16,000, 2nd $12,000, 3rd $9,000, 4th $7,000, 5th $6,000.
 
 ---
 
-## 1. Setup (Windows + WSL)
+## Evaluation
 
-### 1.1 Clone the repo
+Submissions are scored with Mean Reciprocal Rank @ 25 (MRR @25):
 
-```bash
-git clone https://github.com/cterhungga26042006/nveda-CASMI-2026---Molecule-ID-From-Mass-Spectra.git
-cd nveda-CASMI-2026---Molecule-ID-From-Mass-Spectra
-```
+**Formula:** MRR @25 = (1/U) * ∑(1/rank_u) for all U molecules
+- U is the number of molecules.
+- rank_u is the position of the first correct structure in your ranked list for molecule u.
+- A molecule scores 0 if none of its guesses is correct.
 
-Tip: in WSL, work inside the Linux home (for example `~/Enveda`) rather than `/mnt/c/...`. It is much faster.
+**Scoring:** Each molecule has exactly one correct structure, so only the first correct guess counts.
+- A correct guess at position 1 scores 1.0, at position 2 scores 0.5, and at position 25 scores 0.04.
 
-### 1.2 Create the virtual environment
+### Matching Rules
 
-```bash
-sudo apt update && sudo apt install -y python3-venv python3-pip unzip   # first time only
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install kaggle
-```
+A prediction is correct when it has the same atom connectivity as the answer:
+- Both the prediction and the answer are passed through RDKit's tautomer canonicalization (pinned at RDKit 2026.03.3) and reduced to the first block of their InChIKey (InChIKey14).
+- The two keys must match.
 
-Install project packages (once `requirements.txt` exists):
+**Note:** Stereochemistry is removed before tautomer canonicalization. Stereocenters and tautomer forms are not penalized.
 
-```bash
-pip install -r requirements.txt
-```
+### Submission Tips
 
-Useful packages for this project: `numpy`, `pandas`, `rdkit`, `torch`, `scikit-learn`, `matchms`, `jupyter`.
+- Duplicate guesses take up rank positions, so remove duplicates before submitting.
+- An invalid SMILES counts as a wrong guess and still takes up a rank position.
+- A molecule that is missing from the submission scores 0.
 
-Leave the environment with `deactivate`. Re-enter it with `source .venv/bin/activate` every time you open a new terminal.
-
-### 1.3 Set up your Kaggle API token
-
-1. Go to kaggle.com, profile picture, **Settings**, **API**, **Create New Token**.
-2. Place the downloaded `kaggle.json` in `~/.kaggle/`:
-
-```bash
-mkdir -p ~/.kaggle
-cp "/mnt/d/Users/<you>/Downloads/kaggle.json" ~/.kaggle/kaggle.json   # adjust the path
-chmod 600 ~/.kaggle/kaggle.json
-```
-
-3. Test it:
-
-```bash
-kaggle competitions list | head
-```
-
-Keep the token private. Do not share it or commit it.
-
-### 1.4 Download the competition data
-
-Accept the rules on the competition page first, otherwise you get a 403 error.
-
-```bash
-kaggle competitions files enveda-CASMI26-molecule-id-mass-spectra   # check access
-kaggle competitions download -c enveda-CASMI26-molecule-id-mass-spectra
-unzip enveda-CASMI26-molecule-id-mass-spectra.zip -d data/
-ls -lh data/
-```
-
-You can also download the files from the competition's **Data** tab and
-## 2. Setup (Windows, without WSL)
-
-Use this section if you work in PowerShell instead of WSL.
-
-### 2.1 Install the tools (first time only)
-
-Open **PowerShell** and run:
-
-```powershell
-winget install Python.Python.3.12
-winget install Git.Git
-winget install Microsoft.VisualStudioCode
-```
-
-Close and reopen PowerShell, then check:
-
-```powershell
-python --version
-git --version
-```
-
-If `python` opens the Microsoft Store, install Python from python.org and tick **Add python.exe to PATH** in the installer.
-
-Set your Git identity:
-
-```powershell
-git config --global user.name "Your Name"
-git config --global user.email "you@example.com"
-git config --global core.autocrlf true
-```
-
-### 2.2 Clone the repo
-
-Use a short path outside OneDrive (for example `C:\Projects`), because OneDrive sync and long paths cause problems with large datasets.
-
-```powershell
-mkdir C:\Projects
-cd C:\Projects
-git clone https://github.com/cterhungga26042006/nveda-CASMI-2026---Molecule-ID-From-Mass-Spectra.git Enveda
-cd Enveda
-```
-
-### 2.3 Create the virtual environment
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install kaggle
-```
-
-If PowerShell says running scripts is disabled, run this once and try again:
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-```
-
-In `cmd.exe`, use `.venv\Scripts\activate.bat` instead.
-
-Install project packages (once `requirements.txt` exists):
-
-```powershell
-pip install -r requirements.txt
-```
-
-For GPU training, install PyTorch with the command generated at pytorch.org (choose Windows, Pip, and your CUDA version).
-
-Leave the environment with `deactivate`. Re-activate it with `.venv\Scripts\Activate.ps1` in every new terminal.
-
-### 2.4 Set up your Kaggle API token
-
-1. Go to kaggle.com, profile picture, **Settings**, **API**, **Create New Token**.
-2. Copy the downloaded file into your user folder:
-
-```powershell
-mkdir $HOME\.kaggle
-copy "$HOME\Downloads\kaggle.json" "$HOME\.kaggle\kaggle.json"
-```
-
-Adjust the source path if the file is elsewhere (for example `D:\Users\<you>\Downloads\kaggle (1).json`). Keep the quotes because of spaces.
-
-3. Test it:
-
-```powershell
-kaggle competitions list
-```
-
-Keep the token private. Do not share it or commit it.
-
-### 2.5 Download the competition data
-
-Accept the rules on the competition page first, otherwise you get a 403 error.
-
-```powershell
-kaggle competitions files enveda-CASMI26-molecule-id-mass-spectra
-kaggle competitions download -c enveda-CASMI26-molecule-id-mass-spectra
-Expand-Archive enveda-CASMI26-molecule-id-mass-spectra.zip -DestinationPath data
-dir data
-```
-
-You can also download from the competition's **Data** tab and extract into the `data` folder.
-
-### 2.6 Open in VS Code
-
-```powershell
-code .
-```
-
-Install the extensions **Python**, **Jupyter**, and **GitLens**. Press `Ctrl+Shift+P`, choose **Python: Select Interpreter**, and pick `.venv`.
-
-### 2.7 Common problems
-
-| Problem | Fix |
-|---|---|
-| `kaggle` is not recognized | The venv is not active. Re-activate it. |
-| 401 Unauthorized | `kaggle.json` is missing or in the wrong folder. |
-| 403 Forbidden on download | Accept the rules on the competition page. |
-| `Activate.ps1` is blocked | Run the `Set-ExecutionPolicy` command above. |
-| Slow or huge files | Keep the project outside OneDrive, and do not commit `data/`. |
+Official metric notebook: https://www.kaggle.com/code/metric/casmi-mean-reciprocal-rank
 
 ---
